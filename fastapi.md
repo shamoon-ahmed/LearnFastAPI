@@ -85,5 +85,35 @@ def view_patient(patient_id: str = Path(..., description="Patient's ID", example
 ```
 Now if we want patient P006 record (which is not available), the server will raise this exception and say 404 as the resource is not found
 
--------------------
+## Query Parameters 
 
+*Now what if we want to sort patients by some characterstic and in ascending or descending order.*
+<br>
+
+*Means we need to filter out the data based on some conditions. Thats where we use **Query Paramters***
+
+```bash
+from fastapi import FastAPI, Path, HTTPException, Query
+
+@app.get("/patients/sort")
+def sort_patients(sort_by : str = Query(..., description="Sort patients by height, weight or age"), order : str = Query('asc',description="Sort by asc or desc order")):
+
+    sort = ["height", "weight", "age"]
+
+    if sort_by not in sort:
+        raise HTTPException(status_code=400, detail=f"Only sort by {sort}")
+    
+    if order not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Say asc or desc to get ordered list of patients")
+    
+    order_condition = True if order == 'desc' else False
+    
+    sorted_patients = sorted(patients.values(), key=lambda x: x.get(sort_by, 0), reverse=order_condition)
+
+    return sorted_patients
+```
+- First, we defined our route /patients/sort
+- We defined the Query Paramter that our route will take - sort_by which is required (..., indicates required) and order which is optional
+- We did error handling in case we get a bad request - Sending 400 status code
+- Then sorted our patients based on the characterstics and order (if passed)
+- *Our url will look something like this  ->* /patients/sort?sort_by=height&order=asc
