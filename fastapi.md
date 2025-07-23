@@ -19,6 +19,10 @@ def home():
 ```
 get means we're just retrieving some information from the server like retrieving data from the home page
 
+run it with:
+```bash
+uvicorn filename:app --reload
+```
 -------------------
 
 <br>
@@ -79,7 +83,7 @@ def view_patient(patient_id: str = Path(..., description="Patient's ID", example
         return patients[patient_id]
     raise HTTPException(status_code=404, detail="Patient Record Not Found!")
 ```
-Now if we want patient P006 record (which is not available), the server will raise this exception
+Now if we want patient P006 record (which is not available), the server will raise this exception and say 404 as the resource is not found
 
 -------------------
 
