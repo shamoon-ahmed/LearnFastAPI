@@ -1,0 +1,38 @@
+{
+    "P001": {
+      "name": "Ali Khan",
+      "age": 35,
+      "height": 175,
+      "weight": 72,
+      "cause": "High Blood Pressure"
+    },
+    "P002": {
+      "name": "Sarah Ahmed",
+      "age": 28,
+      "height": 162,
+      "weight": 60,
+      "cause": "Diabetes"
+    },
+    "P003": {
+      "name": "Zain Raza",
+      "age": 42,
+      "height": 180,
+      "weight": 85,
+      "cause": "Asthma"
+    },
+    "P004": {
+      "name": "Mehak Noor",
+      "age": 30,
+      "height": 168,
+      "weight": 68,
+      "cause": "Thyroid"
+    },
+    "P005": {
+      "name": "Hamza Qureshi",
+      "age": 50,
+      "height": 170,
+      "weight": 78,
+      "cause": "Heart Disease"
+    }
+  }
+  
