@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, HTTPException, Query
 import json
 
 app = FastAPI()
@@ -21,4 +21,21 @@ def view():
 def view_patient(patient_id: str = Path(..., description="Patient's ID", example='P001')):
     if patient_id in patients:
         return patients[patient_id]
-    return {"error":"No patient record found!"}
+    raise HTTPException(status_code=404, detail="Patient Record Not Found!")
+
+@app.get("/patients/sort")
+def sort_patients(sort_by : str = Query(..., description="Sort patients by height, weight or age"), order : str = Query('asc',description="Sort by asc or desc order")):
+
+    sort = ["height", "weight", "age"]
+
+    if sort_by not in sort:
+        raise HTTPException(status_code=400, detail=f"Only sort by {sort}")
+    
+    if order not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Say asc or desc to get ordered list of patients")
+    
+    order_condition = True if order == 'desc' else False
+    
+    sorted_patients = sorted(patients.values(), key=lambda x: x.get(sort_by, 0), reverse=order_condition)
+
+    return sorted_patients
