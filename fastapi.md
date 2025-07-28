@@ -37,6 +37,8 @@ uvicorn filename:app --reload
 - delete - DELETE
 
 *Now lets load the json file of our patients records and do operations with it by adding different routes*
+
+## GET
 ```bash
 from fastapi import FastAPI, Path
 import json
@@ -117,3 +119,52 @@ def sort_patients(sort_by : str = Query(..., description="Sort patients by heigh
 - We did error handling in case we get a bad request - Sending 400 status code
 - Then sorted our patients based on the characterstics and order (if passed)
 - *Our url will look something like this  ->* /patients/sort?sort_by=height&order=asc
+
+## POST
+
+So here we are sending some data to a server like creating a new account, or a record, etc.
+
+In our case, we are creating a new patient record by filling in some fields and sending that data to a server. <br>
+We used a Pydantic model to type check and validate our data because when creating a new patient, our server wants a structured data so that it's easy to access some parts of it or if we have to do some other operations with it. <br>
+We also used @computed_field to compute non-given fields
+
+```powershell
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, computed_field
+from typing import Annotated, Optional, Literal
+import json
+
+class Patient(BaseModel):
+    id : Annotated[str, Field(..., description='ID of Patient', examples=['P001'])]
+    name : Annotated[str, Field(..., max_length=30)]
+    age : Annotated[int, Field(..., gt=0, lt=120)]
+    ...
+
+def database():
+    # loading our json file
+
+@app.post("/create")
+def create_patient(patient: Patient):
+    
+    # loading our json file
+    patients = database()
+
+    # Check if a patient of id already exists
+    if patient.id in patients:
+        raise HTTPException(status_code=400, detail='Patient already exists!')
+
+    # Add patient created in the dictionary bcz .model_dump() converts a json into a dict
+    patients[patient.id] = patient.model_dump(exclude=['id'])
+
+    # Saving the new record back into a json file
+    saved(patients)
+
+    return JSONResponse(status_code=201, content={'message': 'Patient Created Successfully!'})
+```
+
+- *We defined a /create endpoint where we will send our data*
+- *Checked if a patient already exists by looking at patient id*
+- *We can't add the patient directly into the json file so we convert it into a dictionary by .model_dump() and then added the new patient*
+- *Saved the dictionary with the new data back into a json file*
+- *Returned a successful JSONResponse*
