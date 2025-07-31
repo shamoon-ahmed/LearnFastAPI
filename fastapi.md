@@ -222,9 +222,9 @@ def update_patient(patient_id : str, updated_patient: PatientUpdate):
 
 ## DELETE
 
-```powershell
 DELETE operation is simple as we just get the patient ID from user that they want to delete and delete it from our database
 
+```powershell
 @app.delete('/delete_patient/{patient_id}')
 def delete_patient(patient_id: str):
 
