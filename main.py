@@ -34,6 +34,14 @@ class Patient(BaseModel):
             else:
                 return 'Obesity'
         return None
+    
+class PatientUpdate(BaseModel):
+
+    name : Annotated[Optional[str], Field(default=None, max_length=30)]
+    age : Annotated[Optional[int], Field(default=None, gt=0, lt=120)]
+    height : Annotated[Optional[float], Field(default=None, description='Height of Patient in metres')]
+    weight : Annotated[Optional[float], Field(default=None, description='Weight of Patient in kgs')]
+    cause : Annotated[Optional[str], Field(default=None, description='Cause of visiting')]
         
 def saved(data):
     with open('patients.json', 'w') as f:
@@ -62,7 +70,7 @@ def view():
     return patients
 
 @app.get("/patient/{patient_id}")
-def view_patient(patient_id: str = Path(..., description="Patient's ID", example='P001')):
+def view_patient(patient_id: str = Path(..., description="Patient's ID", examples='P001')):
     if patient_id in patients:
         return patients[patient_id]
     raise HTTPException(status_code=404, detail="Patient Record Not Found!")
@@ -94,10 +102,63 @@ def create_patient(patient: Patient):
     if patient.id in patients:
         raise HTTPException(status_code=400, detail='Patient already exists!')
 
-    # Add patient created in the dictionary bcz .model_dump() converts a json into a dict
+    # if patient doesn't already exitst, we create a new patient record with patient's ID as key
+    # and convert the patient pydantic object into a dictionary by saying .model_dump() and adding it as the value of that key
     patients[patient.id] = patient.model_dump(exclude=['id'])
 
     # Saving the new record back into a json file
     saved(patients)
 
     return JSONResponse(status_code=201, content={'message': 'Patient Created Successfully!'})
+
+@app.put('/edit/{patient_id}')
+def update_patient(patient_id : str, updated_patient: PatientUpdate):
+
+    # loading all the patients record
+    patients = database()
+
+    # checking if it already exists
+    if patient_id not in patients:
+        raise HTTPException(status_code=400, detail='Patient ID does not exist!') 
+    
+    # fetching the patients data by the key that user want to edit/update
+    existing_patient_data = patients[patient_id]
+
+    # fetching the fields from PatientUpdate pydantic model (made above) that the user updated
+    # we're only getting those values that are set/changed/provided cuz all fields are optional when updating. 
+    # we're not getting those fields that are unset
+    updated_patient_data = updated_patient.model_dump(exclude_unset=True)
+
+    # updating the only fields that user updated in that specific patient's record 
+    for key, value in updated_patient_data.items():
+        existing_patient_data[key] = value
+
+    # Now because we also need bmi and verdict (those are computed fields) so we're creating a Patient Object
+    # so that when values are passed in the Patient pydantic model, bmi and verdict is automatically calculated
+    # now cuz existing_patient_data doesn't have 'id' field which is a required field in out Patient Pydantic model
+    # we add the id field so we don't get an error
+    existing_patient_data['id'] = patient_id
+    patient_obj = Patient(**existing_patient_data)
+
+    # now that computed fields are computed, we update the record in our patients database
+    # and excluded the id field cuz that's what we're using as the key of each patient
+    patients[patient_id] = patient_obj.model_dump(exclude='id')
+
+    # saving it back into the patients db
+    saved(patients)
+
+    return JSONResponse(status_code=201, content={'message': 'Patient Record Updated Successfully!'})
+
+@app.delete('/delete_patient/{patient_id}')
+def delete_patient(patient_id: str):
+
+    patients = database()
+
+    if patient_id not in patients:
+        raise HTTPException(status_code=404, detail='Patient Not Found!')
+
+    del patients[patient_id]
+
+    saved(patients)
+
+    return JSONResponse(status_code=201, content={'message':'Patient Record Deleted!'})
