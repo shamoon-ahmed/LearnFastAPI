@@ -154,7 +154,8 @@ def create_patient(patient: Patient):
     if patient.id in patients:
         raise HTTPException(status_code=400, detail='Patient already exists!')
 
-    # Add patient created in the dictionary bcz .model_dump() converts a json into a dict
+    # if patient doesn't already exitst, we create a new patient record with patient's ID as key
+    # and convert the patient pydantic object into a dictionary by saying .model_dump() and adding it as the value of that key
     patients[patient.id] = patient.model_dump(exclude=['id'])
 
     # Saving the new record back into a json file
